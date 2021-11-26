@@ -2,28 +2,49 @@ import ply.yacc as yacc
 import ply.lex as lex
 
 reserved = { 
+    'int': 'INT',
+    'float': 'FLOAT',
+    'string': 'STRING',
     'bool': 'BOOL',
+    'print': 'PRINT',
     'true': 'TRUE',
     'false': 'FALSE',
-    'and': 'AND',
-    'or': 'OR',
     'if': 'IF',
     'elif': 'ELIF',
     'else': 'ELSE',
     'for': 'FOR',
     'while': 'WHILE',
     'do': 'DO',
-    'int': 'INTDEC',
-    'float': 'FLOAT',
-    'string': 'STRING',
-    'print': 'PRINT'
+    'and': 'AND',
+    'or': 'OR'
 }
 
-t_ignore = " \t"
 
-tokens = [
-    'INUMBER', 'FNUMBER', 'NAME'
-] + list(reserved.values())
+tokens = tuple(['ID', 'FLOAT_VAL', 'INT_VAL', 'STR_VAL', 'PLUS', 'MINUS', 'MULT', 'DIV', 'EXP', 'ASSIGN', 'NOT_EQUALS',
+                'EQ_MORE', 'EQ_LESS', 'MORE', 'LESS', 'EQUALS', 'LPAREN', 'RPAREN', 'LKEY', 'RKEY', 'FINISH'] + list(reservedWordDict.values()))
+
+
+t_ignore = ' \t'
+t_PLUS = r'\+'
+t_MINUS = r'-'
+t_MULT = r'\*'
+t_DIV = r'/'
+t_EXP = r'\^'
+t_ASSIGN = r'='
+t_EQUALS = r'=='
+t_NOT_EQUALS = r'!='
+t_EQ_MORE = r'>='
+t_EQ_LESS = r'<='
+t_MORE = r'>'
+t_LESS = r'<'
+t_LPAREN = r'\('
+t_RPAREN = r'\)'
+t_LKEY = r'{'
+t_RKEY = r'}'
+t_FINISH = r';'
+
+
+
 
 # Token
 def t_NAME(t):
