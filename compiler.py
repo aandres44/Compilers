@@ -252,3 +252,150 @@ yacc.yacc()
 file = open("input.txt", "r")
 s = file.read()
 yacc.parse(s)
+
+output = open("output.txt", "w")
+
+
+def parse(instruction):
+    if type(instruction) is not tuple:
+        return instruction
+
+    cur = instruction[0]
+
+    if cur == "print":
+        parsedStatement = parse(instruction[1])
+        output.write(f'print {parsedStatement} \n')
+
+    elif cur == "declare":
+        dataType = instruction[1]
+        id = instruction[2]
+        output.write(f'{dataType} {id} \n')
+
+    elif cur == "declare_assign":
+        dataType = instruction[1]
+        id = instruction[2]
+        output.write(f'{dataType} {id} \n')
+        parsedStatement = parse(instruction[3])
+        output.write(f'{id} = {parsedStatement} \n')
+
+    elif cur == "assign":
+        id = instruction[1]
+        parsedStatement = parse(instruction[2])
+        output.write(f'{id} = {parsedStatement} \n')
+
+    elif cur == "operation":
+        leftStatement = parse(instruction[1])
+        operation = instruction[2]
+        rightStatement = parse(instruction[3])
+        addressCode = outputVariable()
+
+        output.write(
+            f'{addressCode} = {leftStatement} {operation} {rightStatement} \n')
+
+        return addressCode
+
+    elif cur == "condition":
+        ifStatement = instruction[1]
+        elifStatements = instruction[2]
+        elseStatement = instruction[3]
+
+        condition = parse(ifStatement[1])
+        currentCheckpoint = outputLabel()
+        endingCheckpoint = outputLabel()
+        statements = ifStatement[2]
+        output.write(f'if {condition} fails, go to {currentCheckpoint}\n')
+
+        for statement in statements:
+            parse(statement)
+        output.write(f'go to {endingCheckpoint}\n')
+        output.write(f'label {currentCheckpoint}\n')
+
+        for elifStatement in elifStatements:
+            condition = parse(elifStatement[1])
+            statements = elifStatement[2]
+            currentCheckpoint = outputLabel()
+
+            output.write(f'if {condition} fails, go to {currentCheckpoint}\n')
+
+            for statement in statements:
+                parse(statement)
+
+            output.write(f'go to {endingCheckpoint}\n')
+            output.write(f'label {currentCheckpoint}\n')
+
+        if elseStatement is not None:
+            statements = elseStatement[1]
+
+            for statement in statements:
+                parse(statement)
+
+        output.write(f'label {endingCheckpoint}\n')
+
+    elif cur == "for":
+        parse(instruction[1])
+        innerStatements = instruction[4]
+
+        startCheckpoint = outputLabel()
+        endingCheckpoint = outputLabel()
+
+        output.write(f'label {startCheckpoint}\n')
+
+        condition = parse(instruction[2])
+        output.write(f'if {condition} fails, go to {endingCheckpoint}\n')
+
+        for statement in innerStatements:
+            parse(statement)
+
+        output.write(f'go to {startCheckpoint}\n')
+        output.write(f'label {endingCheckpoint}\n')
+
+    elif cur == "while":
+        statements = instruction[2]
+        startCheckpoint = outputLabel()
+        endingCheckpoint = outputLabel()
+        condition = parse(instruction[1])
+
+        output.write(f'label {startCheckpoint}\n')
+        output.write(f'if {condition} fails, go to {endingCheckpoint}\n')
+
+        for statement in statements:
+            parse(statement)
+
+        output.write(f'go to {startCheckpoint}\n')
+        output.write(f'label {endingCheckpoint}\n')
+
+    elif cur == "do-while":
+        statements = instruction[2]
+        startCheckpoint = outputLabel()
+
+        output.write(f'go to {startCheckpoint}\n')
+
+        for statement in statements:
+            parse(statement)
+
+        condition = parse(instruction[1])
+        output.write(f'if {condition} fails, go to {startCheckpoint}\n')
+
+    else:
+        output.write(
+            f'_______ERROR: Unknown statement: {cur}_______\n')
+
+
+def outputLabel():
+    global labelCounter
+    labelCounter += 1
+    return "L" + str(labelCounter)
+
+
+def outputVariable():
+    global variableCounter
+    variableCounter += 1
+    return "V" + str(variableCounter)
+
+
+variableCounter = -1
+labelCounter = -1
+
+for instruction in instructions:
+    parse(instruction)
+output.close()

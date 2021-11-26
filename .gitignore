@@ -1,2 +1,7 @@
 # Environments
 .venv
+/*.out
+/parsetab.py
+/*.txt
+!input.txt
+!requirements.txt
