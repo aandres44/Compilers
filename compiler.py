@@ -1,12 +1,25 @@
 import ply.yacc as yacc
 import ply.lex as lex
 
-literals = ['=', '+', '-', '*', '/', '(', ')']
 reserved = { 
-    'int' : 'INTDEC',
-    'float' : 'FLOATDEC',
-    'print' : 'PRINT'
- }
+    'bool': 'BOOL',
+    'true': 'TRUE',
+    'false': 'FALSE',
+    'and': 'AND',
+    'or': 'OR',
+    'if': 'IF',
+    'elif': 'ELIF',
+    'else': 'ELSE',
+    'for': 'FOR',
+    'while': 'WHILE',
+    'do': 'DO',
+    'int': 'INTDEC',
+    'float': 'FLOAT',
+    'string': 'STRING',
+    'print': 'PRINT'
+}
+
+t_ignore = " \t"
 
 tokens = [
     'INUMBER', 'FNUMBER', 'NAME'
@@ -28,8 +41,6 @@ def t_INUMBER(t):
     t.value = int(t.value)
     return t
 
-t_ignore = " \t"
-
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += t.value.count("\n")
@@ -44,9 +55,12 @@ lexer = lex.lex()
 # Parsing rules
 
 precedence = (
-    ('left', '+', '-'),
-    ('left', '*', '/'),
-    ('right', 'UMINUS'),
+    ('left', 'AND', 'OR'),
+    ('nonassoc', 'EQUALS', 'NOT_EQUALS', 'EQ_MORE', 'EQ_LESS', 'MORE', 'LESS'),
+    ('left', 'PLUS', 'MINUS'),
+    ('left', 'MULT', 'DIV'),
+    ('left', 'EXP'),
+    ('right', 'UMINUS'),  
 )
 
 # dictionary of names
