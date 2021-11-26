@@ -21,7 +21,7 @@ reserved = {
 
 
 tokens = tuple(['ID', 'FLOAT_VAL', 'INT_VAL', 'STR_VAL', 'PLUS', 'MINUS', 'MULT', 'DIV', 'EXP', 'ASSIGN', 'NOT_EQUALS',
-                'EQ_MORE', 'EQ_LESS', 'MORE', 'LESS', 'EQUALS', 'LPAREN', 'RPAREN', 'LKEY', 'RKEY', 'FINISH'] + list(reservedWordDict.values()))
+                'EQ_MORE', 'EQ_LESS', 'MORE', 'LESS', 'EQUALS', 'LPAREN', 'RPAREN', 'LKEY', 'RKEY', 'FINISH'] + list(reserved.values()))
 
 
 t_ignore = ' \t'
@@ -152,6 +152,95 @@ def p_bool_val(p):
     elif p[1] == "false":
         p[0] = False
 
+def p_expression_parenthesis(p):
+    'expression : LPAREN expression RPAREN'
+    p[0] = p[2]
+
+
+def p_expression_uminus(p):
+    'expression : MINUS expression %prec UMINUS'
+    p[0] = -p[2]
+
+
+def p_print_stmt(p):
+    'print_stmt : PRINT expression'
+    p[0] = ('print', p[2])
+
+
+def p_register_stmt(p):
+    '''register_stmt : declare_reg
+            | declare_assign_reg
+            | assign_reg'''
+    p[0] = p[1]
+
+
+def p_condition_stmt(p):
+    '''condition_stmt : if_cond elif_cond else_cond'''
+    p[0] = ('condition', p[1], p[2], p[3])
+
+
+def p_for_stmt(p):
+    '''for_stmt : FOR LPAREN declare_assign_reg FINISH expression FINISH assign_reg RPAREN LKEY statement RKEY'''
+    p[0] = ('for', p[3], p[5], p[7], p[10])
+
+
+def p_while_stmt(p):
+    '''while_stmt : WHILE LPAREN expression RPAREN LKEY statement RKEY
+                 | DO LKEY statement RKEY WHILE LPAREN expression RPAREN FINISH'''
+    if p[1] == "while":
+        p[0] = ('while', p[3], p[6])
+    else:
+        p[0] = ('do-while', p[7], p[3])
+
+
+def p_empty(p):
+    'empty :'
+    pass
+
+
+def p_type(p):
+    '''type : BOOL
+           | INT
+           | FLOAT
+           | STRING'''
+    p[0] = p[1]
+
+
+def p_declare_reg(p):
+    '''declare_reg : type ID'''
+    p[0] = ('declare', p[1], p[2])
+
+
+def p_declare_assign_reg(p):
+    '''declare_assign_reg : type ID ASSIGN expression'''
+    p[0] = ('declare_assign', p[1], p[2], p[4])
+
+
+def p_assign_reg(p):
+    '''assign_reg : ID ASSIGN expression'''
+    p[0] = ('assign', p[1], p[3])
+
+
+def p_if_cond(p):
+    '''if_cond : IF LPAREN expression RPAREN LKEY statement RKEY'''
+    p[0] = ('if', p[3], p[6])
+
+
+def p_elif_cond(p):
+    '''elif_cond : ELIF LPAREN expression RPAREN LKEY statement RKEY elif_cond
+                | empty'''
+    if len(p) > 2:
+        p[0] = (('elif', p[3], p[6]), ) + p[8]
+    else:
+        p[0] = ()
+
+
+def p_else_cond(p):
+    '''else_cond : ELSE LKEY statement RKEY
+                | empty'''
+    if len(p) > 2:
+        p[0] = ('else', p[3])
+
 def p_error(p):
     if p:
         print(p)
@@ -163,11 +252,3 @@ yacc.yacc()
 file = open("input.txt", "r")
 s = file.read()
 yacc.parse(s)
-
-#File
-in_data = []
-with open('code2.txt') as file:
-    in_data = file.readlines()
-
-for data in in_data:
-    yacc.parse(data)
